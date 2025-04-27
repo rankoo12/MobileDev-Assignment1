@@ -13,23 +13,28 @@ import androidx.core.view.isVisible
 
 class GameController(
     private val context: Context,
-    private val gameGrid: GridLayout
-) {
+    private val gameGrid: GridLayout,
+    private val onCollision: () -> Unit)
+{
     private val handler = Handler(Looper.getMainLooper())
     private val obstacles = mutableListOf<Obstacle>()
     private var obstacleId = 1000
     private var tickCount = 0
     private var lastObstacleCol = -1
+    private var isRunning = false
 
 
     fun startGameLoop(car: ImageView) {
+        isRunning = true
         handler.postDelayed(object : Runnable {
             override fun run() {
+                if (!isRunning) return // <- don't continue if not running
                 tick(car)
                 handler.postDelayed(this, 1000)
             }
         }, 1000)
     }
+
 
     fun tick(car: ImageView) {
         moveObstacles()
@@ -82,7 +87,7 @@ class GameController(
                 if (carParams.columnSpec == obstacleParams.columnSpec && carParams.rowSpec == obstacleParams.rowSpec) {
                     FeedbackUtils.showToast(context, "Collision Detected!")
                     FeedbackUtils.vibrate(context)
-
+                    onCollision()
                 }
             }
         }
@@ -118,6 +123,12 @@ class GameController(
 
         }
     }
+    fun stopGameLoop() {
+        isRunning = false
+        handler.removeCallbacksAndMessages(null)
+    }
+
+
 
 
 }
