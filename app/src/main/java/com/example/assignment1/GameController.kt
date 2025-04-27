@@ -1,4 +1,5 @@
 package com.example.assignment1
+import android.Manifest
 import android.view.View
 import android.view.Gravity
 import android.content.Context
@@ -7,6 +8,7 @@ import android.os.Looper
 import android.widget.GridLayout
 import android.widget.ImageView
 import android.util.Log
+import androidx.annotation.RequiresPermission
 import androidx.core.view.isVisible
 
 class GameController(
@@ -16,6 +18,9 @@ class GameController(
     private val handler = Handler(Looper.getMainLooper())
     private val obstacles = mutableListOf<Obstacle>()
     private var obstacleId = 1000
+    private var tickCount = 0
+    private var lastObstacleCol = -1
+
 
     fun startGameLoop(car: ImageView) {
         handler.postDelayed(object : Runnable {
@@ -29,12 +34,24 @@ class GameController(
     fun tick(car: ImageView) {
         moveObstacles()
         detectCollision(car)
-        spawnObstacle()
+
+        tickCount++
+        if (tickCount % 2 == 0) { // Every 2 seconds (every 2 ticks)
+            spawnObstacle()
+        }
     }
 
+    private fun chooseColForObstacle(): Int {
+        var col = (0 until gameGrid.columnCount).random()
+        while (col == lastObstacleCol) {
+            col = (0 until gameGrid.columnCount).random()
+        }
+        lastObstacleCol = col
+        return col
+    }
 
     fun spawnObstacle() {
-        val col = (0 until gameGrid.columnCount).random()
+        val col = chooseColForObstacle()
         val (cellWidth, cellHeight) = getCellSize(gameGrid)
 
         val imageView = ImageView(context)
@@ -55,6 +72,7 @@ class GameController(
     }
 
 
+    @RequiresPermission(Manifest.permission.VIBRATE)
     private fun detectCollision(car: ImageView) {
         for (obstacle in obstacles) {
             val obstacleView = gameGrid.findViewById<ImageView>(obstacle.imageViewId)
@@ -62,7 +80,9 @@ class GameController(
                 val carParams = car.layoutParams as GridLayout.LayoutParams
                 val obstacleParams = obstacleView.layoutParams as GridLayout.LayoutParams
                 if (carParams.columnSpec == obstacleParams.columnSpec && carParams.rowSpec == obstacleParams.rowSpec) {
-                    Log.d("DEBUG", "Collision detected!")
+                    FeedbackUtils.showToast(context, "Collision Detected!")
+                    FeedbackUtils.vibrate(context)
+
                 }
             }
         }
