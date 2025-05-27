@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.VIBRATE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -12,17 +14,27 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Assignment1"
         tools:targetApi="31">
+
+        <!-- MenuActivity is now the launcher -->
+        <activity
+            android:name=".MenuActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Assignment1">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- MainActivity is now launched only from MenuActivity -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Assignment1">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Assignment1" />
     </application>
 
 </manifest>

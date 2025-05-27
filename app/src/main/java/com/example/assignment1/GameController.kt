@@ -1,4 +1,5 @@
 package com.example.assignment1
+
 import android.Manifest
 import android.view.View
 import android.view.Gravity
@@ -14,8 +15,9 @@ import androidx.core.view.isVisible
 class GameController(
     private val context: Context,
     private val gameGrid: GridLayout,
-    private val onCollision: () -> Unit)
-{
+    private val controlMode: ControlMode?, // NEW
+    private val onCollision: () -> Unit
+) {
     private val handler = Handler(Looper.getMainLooper())
     private val obstacles = mutableListOf<Obstacle>()
     private var obstacleId = 1000
@@ -23,25 +25,30 @@ class GameController(
     private var lastObstacleCol = -1
     private var isRunning = false
 
+    // Speed varies by mode
+    private val gameSpeed: Long = when (controlMode) {
+        ControlMode.BUTTON_FAST -> 500L
+        ControlMode.BUTTON_SLOW -> 1000L
+        else -> 1000L
+    }
 
     fun startGameLoop(car: ImageView) {
         isRunning = true
         handler.postDelayed(object : Runnable {
             override fun run() {
-                if (!isRunning) return // <- don't continue if not running
+                if (!isRunning) return
                 tick(car)
-                handler.postDelayed(this, 1000)
+                handler.postDelayed(this, gameSpeed) // UPDATED
             }
-        }, 1000)
+        }, gameSpeed)
     }
-
 
     fun tick(car: ImageView) {
         moveObstacles()
         detectCollision(car)
 
         tickCount++
-        if (tickCount % 2 == 0) { // Every 2 seconds (every 2 ticks)
+        if (tickCount % 2 == 0) {
             spawnObstacle()
         }
     }
@@ -67,7 +74,7 @@ class GameController(
             columnSpec = GridLayout.spec(col)
             width = cellWidth
             height = cellHeight
-            setGravity(android.view.Gravity.CENTER)
+            setGravity(Gravity.CENTER)
         }
 
         imageView.layoutParams = params
@@ -76,7 +83,6 @@ class GameController(
         obstacles.add(Obstacle(0, col, imageView.id))
     }
 
-
     @RequiresPermission(Manifest.permission.VIBRATE)
     private fun detectCollision(car: ImageView) {
         for (obstacle in obstacles) {
@@ -84,24 +90,23 @@ class GameController(
             if (obstacleView.isVisible) {
                 val carParams = car.layoutParams as GridLayout.LayoutParams
                 val obstacleParams = obstacleView.layoutParams as GridLayout.LayoutParams
-                if (carParams.columnSpec == obstacleParams.columnSpec && carParams.rowSpec == obstacleParams.rowSpec) {
+                if (carParams.columnSpec == obstacleParams.columnSpec &&
+                    carParams.rowSpec == obstacleParams.rowSpec
+                ) {
                     FeedbackUtils.showToast(context, "Collision Detected!")
                     FeedbackUtils.vibrate(context)
                     onCollision()
                 }
             }
         }
-
     }
 
     private fun moveObstacles() {
         val iterator = obstacles.iterator()
-
         while (iterator.hasNext()) {
             val obstacle = iterator.next()
             val view = gameGrid.findViewById<ImageView>(obstacle.imageViewId)
 
-            // Already at last playable row? Remove it.
             if (obstacle.row >= gameGrid.rowCount - 1) {
                 gameGrid.removeView(view)
                 iterator.remove()
@@ -115,20 +120,16 @@ class GameController(
                 columnSpec = GridLayout.spec(obstacle.col)
                 width = cellWidth
                 height = cellHeight
-                setGravity(android.view.Gravity.CENTER)
+                setGravity(Gravity.CENTER)
             }
 
             gameGrid.removeView(view)
             gameGrid.addView(view, params)
-
         }
     }
+
     fun stopGameLoop() {
         isRunning = false
         handler.removeCallbacksAndMessages(null)
     }
-
-
-
-
 }

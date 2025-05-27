@@ -1,19 +1,18 @@
 package com.example.assignment1
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import android.widget.GridLayout
+
+import android.content.Intent
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
-import android.view.View
 import android.view.Gravity
+import android.view.View
+import android.widget.GridLayout
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
-import com.example.assignment1.getCellSize
-import com.example.assignment1.createGridMatrix
-import com.example.assignment1.placeCarInGrid
-import com.example.assignment1.moveCarToLane
-
-
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,18 +21,29 @@ class MainActivity : AppCompatActivity() {
     private lateinit var heart2: ImageView
     private lateinit var heart3: ImageView
 
-    private var carLane = 1 // 0 = left, 1 = center, 2 = right
-
-    private var lane = 1 // 0 = left, 1 = center, 2 = right
+    private var carLane = 0 // DEFAULT : 0, changed in placeCarInGrid
+    private var lane = 1
     private var lives = 3
 
     private lateinit var gameController: GameController
-
     private lateinit var gameGrid: GridLayout
+    private var controlMode: ControlMode? = null
+
+    // Sensor-related variables
+    private lateinit var sensorManager: SensorManager
+    private var accelerometer: Sensor? = null
+    private val sensorThreshold = 3.0f
+    private var lastMoveTime = 0L
+    private val debounceTime = 500L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // Get control mode from MenuActivity
+        val modeString = intent.getStringExtra("CONTROL_MODE")
+        controlMode = modeString?.let { ControlMode.valueOf(it) }
+
         heart1 = findViewById(R.id.heart1)
         heart2 = findViewById(R.id.heart2)
         heart3 = findViewById(R.id.heart3)
@@ -41,34 +51,77 @@ class MainActivity : AppCompatActivity() {
         val btnLeft: FloatingActionButton = findViewById(R.id.btnLeft)
         val btnRight: FloatingActionButton = findViewById(R.id.btnRight)
 
-        btnLeft.setOnClickListener {
-            if (carLane > 0) {
-                carLane--
-                moveCarToLane(car, carLane)
-            }
-        }
+        if (controlMode == ControlMode.BUTTON_FAST || controlMode == ControlMode.BUTTON_SLOW) {
+            btnLeft.visibility = View.VISIBLE
+            btnRight.visibility = View.VISIBLE
 
-        btnRight.setOnClickListener {
-            if (carLane < 2) {
-                carLane++
-                moveCarToLane(car, carLane)
+            btnLeft.setOnClickListener {
+                if (carLane > 0) {
+                    carLane--
+                    moveCarToLane(car, carLane)
+                }
             }
+
+            btnRight.setOnClickListener {
+                if (carLane < gameGrid.columnCount - 1) {
+                    carLane++
+                    moveCarToLane(car, carLane)
+                }
+            }
+        } else {
+            btnLeft.visibility = View.GONE
+            btnRight.visibility = View.GONE
+
+            // Sensor setup
+            sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
+            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         }
 
         Log.d("DEBUG", "initGameGrid called")
         initGameGrid()
-
-
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (controlMode == ControlMode.SENSOR) {
+            sensorManager.registerListener(sensorListener, accelerometer, SensorManager.SENSOR_DELAY_GAME)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (controlMode == ControlMode.SENSOR) {
+            sensorManager.unregisterListener(sensorListener)
+        }
+    }
+
+    private val sensorListener = object : SensorEventListener {
+        override fun onSensorChanged(event: SensorEvent?) {
+            val x = event?.values?.get(0) ?: return
+            val now = System.currentTimeMillis()
+            if (now - lastMoveTime < debounceTime) return
+
+            if (x > sensorThreshold && carLane > 0) {
+                carLane--
+                moveCarToLane(car, carLane)
+                lastMoveTime = now
+            } else if (x < -sensorThreshold && carLane < gameGrid.columnCount - 1) {
+                carLane++
+                moveCarToLane(car, carLane)
+                lastMoveTime = now
+            }
+        }
+
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+    }
 
     private fun initGameGrid() {
         gameGrid = findViewById(R.id.gameGrid)
         createGridMatrix(this, gameGrid)
 
-        // Only after layout is ready (height is real):
         gameGrid.post {
-            gameController = GameController(this, gameGrid) {onCarCollision()}
+            carLane = gameGrid.columnCount / 2
+            gameController = GameController(this, gameGrid, controlMode) { onCarCollision() }
             car = placeCarInGrid(this, gameGrid, carLane)
             gameController.startGameLoop(car)
         }
@@ -91,7 +144,7 @@ class MainActivity : AppCompatActivity() {
             columnSpec = GridLayout.spec(carLane)
             width = cellWidth
             height = cellHeight
-            setGravity(android.view.Gravity.CENTER)
+            setGravity(Gravity.CENTER)
         }
 
         car.layoutParams = params
@@ -108,10 +161,13 @@ class MainActivity : AppCompatActivity() {
             0 -> {
                 heart1.visibility = View.GONE
                 gameController.stopGameLoop()
-                showGameOverDialog()
+                val intent = Intent(this, MenuActivity::class.java)
+                finish()
+                startActivity(intent)
             }
         }
     }
+
     private fun showGameOverDialog() {
         runOnUiThread {
             val builder = androidx.appcompat.app.AlertDialog.Builder(this)
@@ -127,15 +183,10 @@ class MainActivity : AppCompatActivity() {
             builder.show()
         }
     }
+
     private fun restartGame() {
-        val intent = intent
+        val intent = Intent(this, MenuActivity::class.java)
         finish()
         startActivity(intent)
     }
-
-
-
-
-
 }
-

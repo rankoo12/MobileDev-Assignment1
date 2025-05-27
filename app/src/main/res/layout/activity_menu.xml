@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp">
+
+    <TextView
+        android:id="@+id/title"
+        android:text="Choose Control Mode"
+        android:textSize="24sp"
+        android:layout_marginBottom="32dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/buttonFast"
+        android:text="Button Mode - Fast"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/buttonSlow"
+        android:text="Button Mode - Slow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp" />
+
+    <Button
+        android:id="@+id/buttonSensor"
+        android:text="Sensor Mode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp" />
+</LinearLayout>
