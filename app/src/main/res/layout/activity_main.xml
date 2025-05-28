@@ -8,34 +8,53 @@
     android:gravity="top"
     tools:context=".MainActivity">
 
-    <!-- Top Row: Lives -->
+    <!-- Top Row: Distance (left) + Lives (right) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="end"
-        android:padding="8dp">
+        android:padding="8dp"
+        android:gravity="center_vertical"
+        android:weightSum="1">
 
-        <ImageView
-            android:id="@+id/heart1"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/heart" />
+        <TextView
+            android:id="@+id/distanceCounter"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.5"
+            android:text="Distance: 0"
+            android:textColor="#000000"
+            android:textSize="18sp"
+            android:paddingEnd="8dp" />
 
-        <ImageView
-            android:id="@+id/heart2"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/heart" />
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.5"
+            android:orientation="horizontal"
+            android:gravity="end">
 
-        <ImageView
-            android:id="@+id/heart3"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/heart" />
+            <ImageView
+                android:id="@+id/heart1"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/heart" />
+
+            <ImageView
+                android:id="@+id/heart2"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/heart" />
+
+            <ImageView
+                android:id="@+id/heart3"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/heart" />
+        </LinearLayout>
     </LinearLayout>
 
-    <!-- TEMP placeholder -->
+    <!-- Game Grid -->
     <GridLayout
         android:id="@+id/gameGrid"
         android:layout_width="match_parent"
@@ -45,21 +64,16 @@
         android:columnCount="5"
         android:alignmentMode="alignMargins"
         android:columnOrderPreserved="false"
-        android:background="#eeeeee"
-        />
+        android:background="#eeeeee" />
 
-    <!-- Car on its own row -->
-
-
-    <!-- Button row below -->
+    <!-- Button row -->
     <LinearLayout
         android:background="#eeeeee"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:padding="1dp"
-        >
+        android:padding="1dp">
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/btnLeft"
@@ -88,8 +102,5 @@
             app:backgroundTint="@color/teal_700"
             app:srcCompat="@drawable/ic_arrow_right" />
     </LinearLayout>
-
-
-
 
 </LinearLayout>

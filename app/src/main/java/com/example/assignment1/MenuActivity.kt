@@ -19,6 +19,7 @@ class MenuActivity : AppCompatActivity() {
         val buttonFast = findViewById<Button>(R.id.buttonFast)
         val buttonSlow = findViewById<Button>(R.id.buttonSlow)
         val buttonSensor = findViewById<Button>(R.id.buttonSensor)
+        val buttonHighscores = findViewById<Button>(R.id.buttonHighscores)
 
         buttonFast.setOnClickListener {
             launchGame(ControlMode.BUTTON_FAST)
@@ -30,6 +31,12 @@ class MenuActivity : AppCompatActivity() {
 
         buttonSensor.setOnClickListener {
             launchGame(ControlMode.SENSOR)
+        }
+
+        // New highscores button handler
+        buttonHighscores.setOnClickListener {
+            val intent = Intent(this, HighscoreActivity::class.java)
+            startActivity(intent)
         }
     }
 

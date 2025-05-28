@@ -16,7 +16,8 @@ class GameController(
     private val context: Context,
     private val gameGrid: GridLayout,
     private val controlMode: ControlMode?, // NEW
-    private val onCollision: () -> Unit
+    private val onCollision: () -> Unit,
+    private val onDistanceUpdate: (Int) -> Unit
 ) {
     private val handler = Handler(Looper.getMainLooper())
     private val obstacles = mutableListOf<Obstacle>()
@@ -24,6 +25,7 @@ class GameController(
     private var tickCount = 0
     private var lastObstacleCol = -1
     private var isRunning = false
+    private var distance = 0
 
     // Speed varies by mode
     private val gameSpeed: Long = when (controlMode) {
@@ -125,7 +127,10 @@ class GameController(
 
             gameGrid.removeView(view)
             gameGrid.addView(view, params)
+
         }
+        distance++
+        onDistanceUpdate(distance)
     }
 
     fun stopGameLoop() {
