@@ -17,7 +17,7 @@
         <activity android:name=".HighscoreActivity" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAwCgKaY3qWtwSh6HG2l-iqk9nI83Pne4c" />
+            android:value="NOPE" />
 
         <!-- MenuActivity is now the launcher -->
         <activity
