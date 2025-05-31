@@ -15,24 +15,28 @@ import androidx.core.view.isVisible
 class GameController(
     private val context: Context,
     private val gameGrid: GridLayout,
-    private val controlMode: ControlMode?, // NEW
+    private val controlMode: ControlMode?,
     private val onCollision: () -> Unit,
     private val onDistanceUpdate: (Int) -> Unit
 ) {
     private val handler = Handler(Looper.getMainLooper())
     private val obstacles = mutableListOf<Obstacle>()
+    private val coins = mutableListOf<Coin>()
     private var obstacleId = 1000
+    private var coinId = 2000
     private var tickCount = 0
     private var lastObstacleCol = -1
     private var isRunning = false
     private var distance = 0
 
-    // Speed varies by mode
     private val gameSpeed: Long = when (controlMode) {
         ControlMode.BUTTON_FAST -> 500L
         ControlMode.BUTTON_SLOW -> 1000L
         else -> 1000L
     }
+
+    data class Obstacle(var row: Int, var col: Int, val imageViewId: Int)
+    data class Coin(var row: Int, var col: Int, val imageViewId: Int)
 
     fun startGameLoop(car: ImageView) {
         isRunning = true
@@ -40,18 +44,21 @@ class GameController(
             override fun run() {
                 if (!isRunning) return
                 tick(car)
-                handler.postDelayed(this, gameSpeed) // UPDATED
+                handler.postDelayed(this, gameSpeed)
             }
         }, gameSpeed)
     }
 
     fun tick(car: ImageView) {
-        moveObstacles()
+        moveObjects()
         detectCollision(car)
 
         tickCount++
         if (tickCount % 2 == 0) {
             spawnObstacle()
+        }
+        if ((0..99).random() < 30) {
+            spawnCoin()
         }
     }
 
@@ -85,6 +92,37 @@ class GameController(
         obstacles.add(Obstacle(0, col, imageView.id))
     }
 
+    fun spawnCoin() {
+        val availableCols = (0 until gameGrid.columnCount).toMutableList()
+
+        for (obstacle in obstacles) {
+            if (obstacle.row == 0) {
+                availableCols.remove(obstacle.col)
+            }
+        }
+
+        if (availableCols.isEmpty()) return
+
+        val col = availableCols.random()
+        val (cellWidth, cellHeight) = getCellSize(gameGrid)
+
+        val imageView = ImageView(context)
+        imageView.setImageResource(R.drawable.coin)
+
+        val params = GridLayout.LayoutParams().apply {
+            rowSpec = GridLayout.spec(0)
+            columnSpec = GridLayout.spec(col)
+            width = cellWidth
+            height = cellHeight
+            setGravity(Gravity.CENTER)
+        }
+
+        imageView.layoutParams = params
+        imageView.id = coinId++
+        gameGrid.addView(imageView)
+        coins.add(Coin(0, col, imageView.id))
+    }
+
     @RequiresPermission(Manifest.permission.VIBRATE)
     private fun detectCollision(car: ImageView) {
         for (obstacle in obstacles) {
@@ -103,15 +141,15 @@ class GameController(
         }
     }
 
-    private fun moveObstacles() {
-        val iterator = obstacles.iterator()
-        while (iterator.hasNext()) {
-            val obstacle = iterator.next()
+    private fun moveObjects() {
+        val obstacleIterator = obstacles.iterator()
+        while (obstacleIterator.hasNext()) {
+            val obstacle = obstacleIterator.next()
             val view = gameGrid.findViewById<ImageView>(obstacle.imageViewId)
 
             if (obstacle.row >= gameGrid.rowCount - 1) {
                 gameGrid.removeView(view)
-                iterator.remove()
+                obstacleIterator.remove()
                 continue
             }
 
@@ -127,8 +165,33 @@ class GameController(
 
             gameGrid.removeView(view)
             gameGrid.addView(view, params)
-
         }
+
+        val coinIterator = coins.iterator()
+        while (coinIterator.hasNext()) {
+            val coin = coinIterator.next()
+            val view = gameGrid.findViewById<ImageView>(coin.imageViewId)
+
+            if (coin.row >= gameGrid.rowCount - 1) {
+                gameGrid.removeView(view)
+                coinIterator.remove()
+                continue
+            }
+
+            coin.row += 1
+            val (cellWidth, cellHeight) = getCellSize(gameGrid)
+            val params = GridLayout.LayoutParams().apply {
+                rowSpec = GridLayout.spec(coin.row)
+                columnSpec = GridLayout.spec(coin.col)
+                width = cellWidth
+                height = cellHeight
+                setGravity(Gravity.CENTER)
+            }
+
+            gameGrid.removeView(view)
+            gameGrid.addView(view, params)
+        }
+
         distance++
         onDistanceUpdate(distance)
     }

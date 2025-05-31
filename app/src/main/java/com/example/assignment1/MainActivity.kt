@@ -5,6 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
@@ -24,7 +25,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var heart2: ImageView
     private lateinit var heart3: ImageView
     private lateinit var distanceText: TextView
-
+    private lateinit var crashSound: MediaPlayer
     private var carLane = 0
     private var lane = 1
     private var lives = 3
@@ -51,6 +52,7 @@ class MainActivity : AppCompatActivity() {
         heart2 = findViewById(R.id.heart2)
         heart3 = findViewById(R.id.heart3)
         distanceText = findViewById(R.id.distanceCounter)
+        crashSound = MediaPlayer.create(this, R.raw.crash_sound)
 
         val btnLeft: FloatingActionButton = findViewById(R.id.btnLeft)
         val btnRight: FloatingActionButton = findViewById(R.id.btnRight)
@@ -82,6 +84,10 @@ class MainActivity : AppCompatActivity() {
 
         Log.d("DEBUG", "initGameGrid called")
         initGameGrid()
+    }
+
+    private fun playCrashSound() {
+        crashSound.start()
     }
 
     override fun onResume() {
@@ -141,24 +147,6 @@ class MainActivity : AppCompatActivity() {
         return Pair(cellWidth, cellHeight)
     }
 
-    private fun placeCarInGrid() {
-        val (cellWidth, cellHeight) = getCellSize(gameGrid)
-
-        car = ImageView(this)
-        car.setImageResource(R.drawable.old_car)
-
-        val params = GridLayout.LayoutParams().apply {
-            rowSpec = GridLayout.spec(6)
-            columnSpec = GridLayout.spec(carLane)
-            width = cellWidth
-            height = cellHeight
-            setGravity(Gravity.CENTER)
-        }
-
-        car.layoutParams = params
-        gameGrid.addView(car)
-    }
-
     fun getRandomLocationInIsrael(): LatLng {
         val minLat = 29.4
         val maxLat = 33.3
@@ -176,6 +164,7 @@ class MainActivity : AppCompatActivity() {
         lives--
         Log.d("DEBUG", "Lives left: $lives")
         val randomLocation = getRandomLocationInIsrael()
+        playCrashSound()
         when (lives) {
             2 -> heart3.visibility = View.GONE
             1 -> heart2.visibility = View.GONE

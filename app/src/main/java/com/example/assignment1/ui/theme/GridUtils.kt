@@ -38,7 +38,7 @@ fun createGridMatrix(context: Context, gameGrid: GridLayout, color: Int = 0xFFDD
 fun placeCarInGrid(context: Context, gameGrid: GridLayout, lane: Int): ImageView {
     val (cellWidth, cellHeight) = getCellSize(gameGrid)
     val car = ImageView(context)
-    car.setImageResource(R.drawable.old_car)
+    car.setImageResource(R.drawable.car)
 
     val params = GridLayout.LayoutParams().apply {
         rowSpec = GridLayout.spec(gameGrid.rowCount - 1)
